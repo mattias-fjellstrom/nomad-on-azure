@@ -33,6 +33,8 @@ locals {
   nomad = {
     vmss_name = "vmss-nomad-servers"
 
+    version = "1.10.2"
+
     cloudinit_files = {
       write_files = [
         {
@@ -141,15 +143,44 @@ data "cloudinit_config" "nomad" {
   gzip          = false
   base64_encode = true
 
-  # Install Nomad and Consul
+  # install dependencies
   part {
-    filename     = "install-nomad.sh"
     content_type = "text/x-shellscript"
     content      = <<-EOF
       #!/bin/bash
-      wget -O - https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-      echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
-      apt update && apt install -y nomad consul
+      apt-get update
+      apt-get clean
+      apt-get install -y curl unzip
+    EOF
+  }
+
+  # Download and install Nomad + Consul and create the Nomad + Consul users
+  part {
+    content_type = "text/x-shellscript"
+    content      = <<-EOF
+      #!/bin/bash
+
+      # download and install Nomad
+      curl \
+        --silent \
+        --remote-name https://releases.hashicorp.com/nomad/${local.nomad.version}/nomad_${local.nomad.version}_linux_amd64.zip
+      unzip nomad_${local.nomad.version}_linux_amd64.zip
+      chown root:root nomad
+      mv nomad /usr/bin/
+
+      # download and install Consul
+      curl \
+        --silent \
+        --remote-name https://releases.hashicorp.com/consul/${local.consul.version}/consul_${local.consul.version}_linux_amd64.zip
+      unzip consul_${local.consul.version}_linux_amd64.zip
+      chown root:root consul
+      mv consul /usr/bin/
+
+      # create the Nomad user
+      useradd --system --home /etc/nomad.d --shell /bin/false nomad
+      
+      # create the Consul user
+      useradd --system --home /etc/consul.d --shell /bin/false consul
     EOF
   }
 
@@ -158,7 +189,6 @@ data "cloudinit_config" "nomad" {
     content      = yamlencode(local.nomad.cloudinit_files)
   }
 
-  # Start the Nomad service
   part {
     content_type = "text/x-shellscript"
     content      = <<-EOF
@@ -169,9 +199,14 @@ data "cloudinit_config" "nomad" {
 
       mkdir -p /opt/consul
       chown -R consul:consul /opt/consul
-      chown -R consul:consul /etc/consul.d
-      chmod 640 /etc/consul.d/consul.hcl
+    EOF
+  }
 
+  # Start Nomad and Consul services
+  part {
+    content_type = "text/x-shellscript"
+    content      = <<-EOF
+      #!/bin/bash
       systemctl daemon-reload
 
       systemctl enable consul
@@ -224,8 +259,6 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "nomad" {
       name      = "primary"
       subnet_id = azurerm_subnet.nomad.id
       version   = "IPv4"
-
-      # load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.nomad.id]
 
       public_ip_address {
         name = "pip-nomad-servers"

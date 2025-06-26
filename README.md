@@ -7,3 +7,9 @@ This is an accompanying repository for a series of blog posts I publish on my [b
 Find the blog post at [mattias.engineer/blog/2025/nomad-on-azure-1](https://mattias.engineer/blog/2025/nomad-on-azure-1).
 
 The source code for this part is available in the directory [part01](./part01/).
+
+## Part 2: The one where we introduce Consul
+
+Find the blog post at [mattias.engineer/blog/2025/nomad-on-azure-2](https://mattias.engineer/blog/2025/nomad-on-azure-2).
+
+The source code for this part is available in the directory [part02](./part02/).

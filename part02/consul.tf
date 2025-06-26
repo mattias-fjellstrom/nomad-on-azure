@@ -33,6 +33,8 @@ locals {
   consul = {
     vmss_name = "vmss-consul-servers"
 
+    version = "1.21.2"
+
     cloudinit_files = {
       write_files = [
         {
@@ -83,15 +85,33 @@ data "cloudinit_config" "consul" {
   gzip          = false
   base64_encode = true
 
-  # Install Consul
+  # install dependencies
   part {
-    filename     = "install-consul.sh"
     content_type = "text/x-shellscript"
     content      = <<-EOF
       #!/bin/bash
-      wget -O - https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-      echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(grep -oP '(?<=UBUNTU_CODENAME=).*' /etc/os-release || lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
-      apt update && apt install -y consul
+      apt-get update
+      apt-get clean
+      apt-get install -y curl unzip
+    EOF
+  }
+
+  # Install Consul
+  part {
+    content_type = "text/x-shellscript"
+    content      = <<-EOF
+      #!/bin/bash
+
+      # download and install Consul
+      curl \
+        --silent \
+        --remote-name https://releases.hashicorp.com/consul/${local.consul.version}/consul_${local.consul.version}_linux_amd64.zip
+      unzip consul_${local.consul.version}_linux_amd64.zip
+      chown root:root consul
+      mv consul /usr/bin/
+
+      # create the Consul user
+      useradd --system --home /etc/consul.d --shell /bin/false consul
     EOF
   }
 
@@ -108,9 +128,14 @@ data "cloudinit_config" "consul" {
 
       mkdir -p /opt/consul
       chown -R consul:consul /opt/consul
-      chown -R consul:consul /etc/consul.d
-      chmod 640 /etc/consul.d/consul.hcl
+    EOF
+  }
 
+  # Start the Consul service
+  part {
+    content_type = "text/x-shellscript"
+    content      = <<-EOF
+      #!/bin/bash
       systemctl daemon-reload
       systemctl enable consul
       systemctl start consul
