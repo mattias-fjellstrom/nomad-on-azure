@@ -13,3 +13,11 @@ The source code for this part is available in the directory [part01](./part01/).
 Find the blog post at [mattias.engineer/blog/2025/nomad-on-azure-2](https://mattias.engineer/blog/2025/nomad-on-azure-2).
 
 The source code for this part is available in the directory [part02](./part02/).
+
+## Part 3: Nomad clients and a first Nomad job
+
+In this part we add **Nomad clients** and run our first **Nomad job** on one of the clients.
+
+Find the blog post at [mattias.engineer/blog/2025/nomad-on-azure-3](https://mattias.engineer/blog/2025/nomad-on-azure-3).
+
+The source code for this part is available in the directory [part03](./part03/).
