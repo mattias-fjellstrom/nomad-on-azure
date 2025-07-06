@@ -29,3 +29,11 @@ In this part we add an **Azure load balancer** for our Nomad servers and we acce
 Find the blog post at [mattias.engineer/blog/2025/nomad-on-azure-4](https://mattias.engineer/blog/2025/nomad-on-azure-4).
 
 The source code for this part is available in the directory [part04](./part04/).
+
+## Part 5: DNS, TLS, and Gossip Encryption
+
+In this part we enable mutual TLS and gossip encryption. We also add a DNS record for the Azure load balancer so that we can reach the Nomad servers through a nice name instead of an IP address.
+
+Find the blog post at [mattias.engineer/blog/2025/nomad-on-azure-5](https://mattias.engineer/blog/2025/nomad-on-azure-5).
+
+The source code for this part is available in the directory [part05](./part05/).
