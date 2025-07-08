@@ -42,3 +42,6 @@ terraform.rc
 *.csr
 *.key
 *.pfx
+
+# license
+*.hclic

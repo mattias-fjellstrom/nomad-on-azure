@@ -37,3 +37,11 @@ In this part we enable mutual TLS and gossip encryption. We also add a DNS recor
 Find the blog post at [mattias.engineer/blog/2025/nomad-on-azure-5](https://mattias.engineer/blog/2025/nomad-on-azure-5).
 
 The source code for this part is available in the directory [part05](./part05/).
+
+## Part 6: Nomad Enterprise, enable ACLs, and refactor Terraform configurations
+
+In this part we move from Nomad community edition to Nomad Enterprise. We also enable the ACL system and touch on the subject of tokens, policies, and roles. Finally, the Terraform configuration is refactored into separate Terraform configurations for platform components (virtual network), Consul servers, Nomad servers, and Nomad clients.
+
+Find the blog post at [mattias.engineer/blog/2025/nomad-on-azure-6](https://mattias.engineer/blog/2025/nomad-on-azure-6).
+
+The source code for this part is available in the directory [part06](./part06/).

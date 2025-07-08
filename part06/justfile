@@ -1,0 +1,85 @@
+[working-directory: 'infrastructure/platform']
+platform-apply:
+  #!/bin/bash
+  set -euo pipefail
+  terraform init
+  terraform apply -auto-approve
+
+[working-directory: 'infrastructure/platform']
+platform-destroy:
+  #!/bin/bash
+  set -euo pipefail
+  terraform init
+  terraform destroy -auto-approve
+
+[working-directory: 'infrastructure/consul']
+consul-apply: platform-apply
+  #!/bin/bash
+  set -euo pipefail
+  terraform init
+  terraform apply -auto-approve
+
+[working-directory: 'infrastructure/consul']
+consul-destroy:
+  #!/bin/bash
+  set -euo pipefail
+  terraform init
+  terraform destroy -auto-approve
+
+[working-directory: 'infrastructure/nomad/servers']
+nomad-servers-apply: platform-apply consul-apply
+  #!/bin/bash
+  set -euo pipefail
+  terraform init
+  terraform apply -auto-approve
+
+[working-directory: 'infrastructure/nomad/servers']
+nomad-servers-destroy:
+  #!/bin/bash
+  set -euo pipefail
+  terraform init
+  terraform destroy -auto-approve
+
+[working-directory: 'infrastructure/nomad/servers']
+nomad-servers-output:
+  #!/bin/bash
+  set -euo pipefail
+  terraform output -raw nomad_environment_variables
+
+[working-directory: 'infrastructure/nomad/clients']
+nomad-clients-apply: platform-apply consul-apply nomad-servers-apply
+  #!/bin/bash
+  set -euo pipefail
+  terraform init
+  terraform apply -auto-approve
+
+[working-directory: 'infrastructure/nomad/clients']
+nomad-clients-destroy:
+  #!/bin/bash
+  set -euo pipefail
+  terraform init
+  terraform destroy -auto-approve
+
+destroy:
+  just nomad-clients-destroy
+  just nomad-servers-destroy
+  just consul-destroy
+  just platform-destroy
+
+connect-to-nomad-servers:
+  #!/bin/bash
+  pip=$(az network public-ip show \
+    --name pip-nomad-servers-lb \
+    --resource-group rg-nomad-servers-on-azure \
+    --query "ipAddress" \
+    --output tsv)
+  ssh -i infrastructure/nomad/servers/ssh_keys/servers.pem -p 2222 azureuser@$pip
+
+connect-to-consul-servers:
+  #!/bin/bash
+  pip=$(az network public-ip show \
+    --name pip-consul-servers-lb \
+    --resource-group rg-consul-on-azure \
+    --query "ipAddress" \
+    --output tsv)
+  ssh -i infrastructure/consul/ssh_keys/servers.pem -p 2222 azureuser@$pip
