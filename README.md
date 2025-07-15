@@ -45,3 +45,11 @@ In this part we move from Nomad community edition to Nomad Enterprise. We also e
 Find the blog post at [mattias.engineer/blog/2025/nomad-on-azure-6](https://mattias.engineer/blog/2025/nomad-on-azure-6).
 
 The source code for this part is available in the directory [part06](./part06/).
+
+## Part 7:
+
+In this part we strengthen the Consul cluster security by enabling mTLS and gossip encryption. We also provision an Azure private DNS resolver in our shared platform virtual network and make Consul answer DNS queries for the `.consul` domain.
+
+Find the blog post at [mattias.engineer/blog/2025/nomad-on-azure-7](https://mattias.engineer/blog/2025/nomad-on-azure-7).
+
+The source code for this part is available in the directory [part07](./part07/).
