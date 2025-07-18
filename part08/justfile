@@ -1,0 +1,142 @@
+[working-directory: 'infrastructure/hcp']
+hcp-apply:
+  #!/bin/bash
+  set -euo pipefail
+  terraform init
+  terraform apply -auto-approve
+
+[working-directory: 'infrastructure/hcp']
+hcp-destroy: boundary-destroy
+  #!/bin/bash
+  set -euo pipefail
+  terraform init
+  terraform destroy -auto-approve
+
+[working-directory: 'infrastructure/boundary']
+boundary-apply: hcp-apply
+  #!/bin/bash
+  set -euo pipefail
+  terraform init
+  terraform apply -auto-approve
+
+[working-directory: 'infrastructure/boundary']
+boundary-destroy:
+  #!/bin/bash
+  set -euo pipefail
+  terraform init
+  terraform destroy -auto-approve
+
+[working-directory: 'infrastructure/platform']
+platform-apply:
+  #!/bin/bash
+  set -euo pipefail
+  terraform init
+  terraform apply -auto-approve
+
+[working-directory: 'infrastructure/platform']
+platform-destroy:
+  #!/bin/bash
+  set -euo pipefail
+  terraform init
+  terraform destroy -auto-approve
+
+[working-directory: 'infrastructure/consul/servers']
+consul-apply: platform-apply
+  #!/bin/bash
+  set -euo pipefail
+  terraform init
+  terraform apply -auto-approve
+
+[working-directory: 'infrastructure/consul/servers']
+consul-destroy:
+  #!/bin/bash
+  set -euo pipefail
+  terraform init
+  terraform destroy -auto-approve
+
+[working-directory: 'infrastructure/nomad/servers']
+nomad-servers-apply: platform-apply consul-apply
+  #!/bin/bash
+  set -euo pipefail
+  terraform init
+  terraform apply -auto-approve
+
+[working-directory: 'infrastructure/nomad/servers']
+nomad-servers-destroy:
+  #!/bin/bash
+  set -euo pipefail
+  terraform init
+  terraform destroy -auto-approve
+
+[working-directory: 'infrastructure/nomad/servers']
+nomad-servers-output:
+  #!/bin/bash
+  set -euo pipefail
+  terraform output -raw nomad_environment_variables
+
+[working-directory: 'infrastructure/nomad/clients']
+nomad-clients-apply: platform-apply consul-apply nomad-servers-apply
+  #!/bin/bash
+  set -euo pipefail
+  terraform init
+  terraform apply -auto-approve
+
+[working-directory: 'infrastructure/nomad/clients']
+nomad-clients-destroy:
+  #!/bin/bash
+  set -euo pipefail
+  terraform init
+  terraform destroy -auto-approve
+
+apply:
+  just platform-apply
+  just consul-apply
+  just nomad-servers-apply
+  just nomad-clients-apply
+  just boundary-apply
+
+destroy:
+  just boundary-destroy
+  just nomad-clients-destroy
+  just nomad-servers-destroy
+  just consul-destroy
+  just platform-destroy
+
+connect-to-boundary-workers:
+  #!/bin/bash
+  NIC_ID=$(az network nic list \
+    --resource-group rg-boundary-on-azure \
+    --query '[0].ipConfigurations[0].publicIPAddress.id' \
+    -o tsv)
+  PUBLIC_IP=$(az network public-ip show --ids $NIC_ID --query 'ipAddress' -o tsv)
+  ssh -i infrastructure/boundary/ssh_keys/servers.pem azureuser@$PUBLIC_IP
+
+[working-directory: 'infrastructure/consul/tls']
+generate-consul-tls domain:
+  #!/bin/bash
+
+  domain={{ domain }}
+
+  consul tls ca create \
+    -name-constraint="true" \
+    -additional-name-constraint "$domain"
+
+  # three server certificates
+  consul tls cert create -server -dc dc1 -additional-dnsname "$domain"
+
+[working-directory: 'infrastructure/nomad/tls']
+generate-nomad-tls domain:
+  #!/bin/bash
+
+  domain={{ domain }}
+
+  nomad tls ca create -name-constraint="true" -domain "$domain" -additional-domain "$domain"
+  nomad tls cert create -server -region global -domain "$domain" -additional-dnsname "$domain"
+  nomad tls cert create -client -ca "$domain-agent-ca.pem" -key "$domain-agent-ca-key.pem" -additional-dnsname "$domain"
+  nomad tls cert create -cli -ca "$domain-agent-ca.pem" -key "$domain-agent-ca-key.pem" -additional-dnsname "$domain"
+
+[working-directory: 'infrastructure/consul/gossip']
+generate-consul-gossip-key:
+  #!/bin/bash
+  set -euo pipefail
+  consul keygen > gossip.key

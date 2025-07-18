@@ -53,3 +53,11 @@ In this part we strengthen the Consul cluster security by enabling mTLS and goss
 Find the blog post at [mattias.engineer/blog/2025/nomad-on-azure-7](https://mattias.engineer/blog/2025/nomad-on-azure-7).
 
 The source code for this part is available in the directory [part07](./part07/).
+
+## Part 8
+
+In this part we remove all public access to the Consul and Nomad clusters. We switch from using a public DNS zone to a private DNS zone. Then we introduce HashiCorp Boundary to allow us to privately access the clusters, both through the UI and the CLI, as well as to SSH directly into the virtual machines.
+
+Find the blog post at [mattias.engineer/blog/2025/nomad-on-azure-8](https://mattias.engineer/blog/2025/nomad-on-azure-8).
+
+The source code for this part is available in the directory [part08](./part08/).
