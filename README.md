@@ -61,3 +61,11 @@ In this part we remove all public access to the Consul and Nomad clusters. We sw
 Find the blog post at [mattias.engineer/blog/2025/nomad-on-azure-8](https://mattias.engineer/blog/2025/nomad-on-azure-8).
 
 The source code for this part is available in the directory [part08](./part08/).
+
+## Part 9
+
+In this part we focus on jobs on Nomad. We add an Azure application gateway to our infrastructure as an entrypoint for public jobs (e.g. web apps) on Nomad. We add an internal load balancer (Nginx) as a job on Nomad and send traffic to our public jobs through the application gateway and Nginx.
+
+Find the blog post at [mattias.engineer/blog/2025/nomad-on-azure-9](https://mattias.engineer/blog/2025/nomad-on-azure-9).
+
+The source code for this part is available in the directory [part09](./part09/).
